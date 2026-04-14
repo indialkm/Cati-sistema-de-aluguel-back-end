@@ -20,7 +20,6 @@ import com.cati.tcc.dto.response.AluguelResponse;
 import com.cati.tcc.dto.response.ChecklistResponse;
 import com.cati.tcc.mapper.AluguelMapper;
 import com.cati.tcc.mapper.ChecklistMapper;
-import com.cati.tcc.model.Aluguel;
 import com.cati.tcc.service.AluguelService;
 import com.cati.tcc.service.ChecklistService;
 

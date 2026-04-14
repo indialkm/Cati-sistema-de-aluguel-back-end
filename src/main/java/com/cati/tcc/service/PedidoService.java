@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cati.tcc.model.Carrinho;
+import com.cati.tcc.model.Estoque;
 import com.cati.tcc.model.ItemCarrinho;
 import com.cati.tcc.model.ItemPedido;
 import com.cati.tcc.model.Pedido;
