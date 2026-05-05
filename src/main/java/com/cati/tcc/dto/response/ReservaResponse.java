@@ -6,7 +6,6 @@ import java.util.UUID;
 import com.cati.tcc.model.enums.StatusReserva;
 
 
-
 public record ReservaResponse(
 		
 		UUID id,

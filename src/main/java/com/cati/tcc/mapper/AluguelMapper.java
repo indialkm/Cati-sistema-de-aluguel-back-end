@@ -26,22 +26,22 @@ public class AluguelMapper {
 	public AluguelResponse toResponse(Aluguel a) {
         return new AluguelResponse(
             a.getId(),
-            a.getItemPedido().getEstoque().getNome(),
-            a.getItemPedido().getPreco(),
-            a.getStatus(),
-            reservaMapper.toResponse(a.getItemPedido().getReserva()),
-            enderecoMapper.toResponse(a.getItemPedido().getEnderecoEntrega())
+            a.getEstoque().getNome(),
+            a.getPreco(),
+            a.getStatus().name(),
+            reservaMapper.toResponse(a.getReserva()),
+            enderecoMapper.toResponse(a.getEndereco())
         );
     }
 	
 	public AluguelResponseCheck toResponseComCheck(Aluguel a) {
         return new AluguelResponseCheck(
             a.getId(),
-            a.getItemPedido().getEstoque().getNome(),
-            a.getItemPedido().getPreco(),
+            a.getEstoque().getNome(),
+            a.getPreco(),
             a.getStatus(),
-            reservaMapper.toResponse(a.getItemPedido().getReserva()),
-            enderecoMapper.toResponse(a.getItemPedido().getEnderecoEntrega()),
+            reservaMapper.toResponse(a.getReserva()),
+            enderecoMapper.toResponse(a.getEndereco()),
             checklistMapper.toResponse(a.getChecklistEntrada()),
             checklistMapper.toResponse(a.getChecklistSaida())
         );

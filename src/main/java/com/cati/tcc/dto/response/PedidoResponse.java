@@ -11,6 +11,7 @@ import com.cati.tcc.model.enums.StatusPedido;
 public record PedidoResponse(
 		
 		UUID id,
+		String nomeUsuario,
 	    Double valorTotal,
 	    StatusPedido status,
 	    LocalDateTime dataPedido,

@@ -1,5 +1,6 @@
 package com.cati.tcc.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,10 @@ import com.cati.tcc.mapper.ItemPedidoMapper;
 import com.cati.tcc.model.ItemCarrinho;
 import com.cati.tcc.model.ItemPedido;
 import com.cati.tcc.model.Pedido;
+import com.cati.tcc.model.Reserva;
+import com.cati.tcc.model.enums.StatusItemPedido;
+import com.cati.tcc.model.enums.StatusPedido;
+import com.cati.tcc.model.enums.StatusReserva;
 import com.cati.tcc.repository.ItemPedidoRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +34,12 @@ public class ItemPedidoService {
 	
 	@Transactional
 	public ItemPedido criarItemPedido(ItemCarrinho item) {
+		
+		Reserva reserva = item.getReserva();
+		reserva.setDisponibilidade(StatusReserva.AGUARDANDO_PAGAMENTO);
+		reserva.setAuditoriaReserva(LocalDateTime.now());
+		
+		item.setReserva(reserva);
 		
 		return itemMapper.toPedido(item);
 		
@@ -59,4 +70,41 @@ public class ItemPedidoService {
 	public List<ItemPedido> buscarTodos() {
 		return itemRepository.findAll();
 	}
+	
+	/*****************MUDAR STATUS*********************************/
+	
+	@Transactional
+	public void statusConcluido(UUID idItem) {
+		
+		ItemPedido item = itemRepository.findById(idItem)
+						.orElseThrow(() -> new EntityNotFoundException("Esse item do pedido não foi encontrado"));
+		
+		item.setStatus(StatusItemPedido.CONCLUIDO);	
+		itemRepository.save(item);
+	}
+	
+	
+	@Transactional
+	public void statusCancelado(UUID idItem) {
+		
+		ItemPedido item = itemRepository.findById(idItem)
+						.orElseThrow(() -> new EntityNotFoundException("Esse item do pedido não foi encontrado"));
+		
+		item.setStatus(StatusItemPedido.CANCELADO);	
+		itemRepository.save(item);
+	}
+	
+	@Transactional
+	public void statusAguardando(UUID idItem) {
+		
+		ItemPedido item = itemRepository.findById(idItem)
+						.orElseThrow(() -> new EntityNotFoundException("Esse item do pedido não foi encontrado"));
+		
+		item.setStatus(StatusItemPedido.AGUARDANDO);	
+		itemRepository.save(item);
+		
+
+	}
+	
+	/*****************MUDAR STATUS*********************************/
 }

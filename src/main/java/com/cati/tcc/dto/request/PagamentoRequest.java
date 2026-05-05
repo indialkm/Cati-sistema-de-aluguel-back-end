@@ -9,13 +9,11 @@ import jakarta.validation.constraints.Positive;
 
 public record PagamentoRequest(
 		
-	    UUID idPedido,
-	    FormasPagamento formaPagamento,
-	    String transacaoGatewayId,
-	    Double valorPago,
-	    String payload_retorno,
-	    Integer parcelas
-		
+				UUID idPedido,
+			    Double valorPago,
+			    FormasPagamento formaPagamento,
+			    Integer parcelas
+	
 		) {
 
 }

@@ -18,15 +18,16 @@ public class PagamentoMapper {
         if (pagamento == null) return null;
 
         return new PagamentoResponse(
-            pagamento.getId(),
-            pagamento.getPedido() != null ? pagamento.getPedido().getId() : null,
-            pagamento.getValorPago(),
-            pagamento.getDataPagamento(),
-            pagamento.getStatus(),
-            pagamento.getFormaPagamento(),
-            pagamento.getTransacaoGatewayId(),
-            pagamento.getParcelas()
-        );
+                pagamento.getId(),
+                pagamento.getPedido().getId(),
+                pagamento.getValorPago(),
+                pagamento.getDataPagamento(),
+                pagamento.getStatus(),
+                pagamento.getFormaPagamento(),
+                pagamento.getTransacaoGatewayId(),
+                pagamento.getClientSecret(), 
+                pagamento.getParcelas()
+            );
     }
 
 	public Pagamento toEntity(PagamentoRequest request, Pedido pedido) {
@@ -37,7 +38,7 @@ public class PagamentoMapper {
         pagamento.setDataPagamento(LocalDateTime.now()); 
         pagamento.setStatus(StatusPagamento.PENDENTE);  
         pagamento.setFormaPagamento(request.formaPagamento());
-        pagamento.setTransacaoGatewayId(request.transacaoGatewayId());
+        //pagamento.setTransacaoGatewayId(request.);
         pagamento.setParcelas(request.parcelas());
 
         return pagamento;

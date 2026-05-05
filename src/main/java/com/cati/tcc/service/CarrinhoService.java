@@ -1,160 +1,151 @@
 package com.cati.tcc.service;
 
-import java.util.Optional;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import com.cati.tcc.config.security.UserSpringSecurity;
 import com.cati.tcc.dto.request.ItemCarrinhoRequest;
-import com.cati.tcc.mapper.CarrinhoMapper;
 import com.cati.tcc.model.Carrinho;
-import com.cati.tcc.model.ItemCarrinho;
 import com.cati.tcc.model.User;
 import com.cati.tcc.model.enums.StatusCarrinho;
 import com.cati.tcc.repository.CarrinhoRepository;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
 @Service
 public class CarrinhoService {
 
     private final CarrinhoRepository carrinhoRepository;
-    private final CarrinhoMapper carrinhoMapper;
     private final AuthService auth;
-    
     private final UserService userService;
     private final ItemCarrinhoService itemService;
-	
+    private final RegraPrecoService precoService;
 
-    public CarrinhoService(CarrinhoRepository carrinhoRepository, CarrinhoMapper carrinhoMapper, AuthService auth,
-			UserService userService, ItemCarrinhoService itemService) {
-		this.carrinhoRepository = carrinhoRepository;
-		this.carrinhoMapper = carrinhoMapper;
-		this.auth = auth;
-		this.userService = userService;
-		this.itemService = itemService;
-	}
+    public CarrinhoService(CarrinhoRepository carrinhoRepository, AuthService auth,
+                          UserService userService, ItemCarrinhoService itemService, 
+                          RegraPrecoService precoService) {
+        this.carrinhoRepository = carrinhoRepository;
+        this.auth = auth;
+        this.userService = userService;
+        this.itemService = itemService;
+        this.precoService = precoService;
+    }
 
+    /**
+     * Ponto de entrada principal para adicionar itens. 
+     * Resolve se o carrinho é novo, existente ou se precisa de merge.
+     */
     @Transactional
-    public Carrinho buscarCarrinhoAtivo(UUID id) {
-    	
-    	return carrinhoRepository.findByUserIdAndStatusCarrinho(id, StatusCarrinho.ABERTO)
-    			.orElseThrow(() -> new EntityNotFoundException("Carrinho não enocntrado apra esse usuário"));
-    	
-    }
-
-	@Transactional
-    public Carrinho buscarOuCriarCarrinho(Optional<UUID> idCarrinhoFantasma) {
-    
+    public Carrinho adicionarItem(UUID idCarrinhoExistente, ItemCarrinhoRequest request) {
         UUID idUsuarioLogado = auth.getAuthenticatedUserId();
+        Carrinho carrinho;
 
-        // 2. Busca ou Cria (Sua lógica está perfeita aqui)
-        Carrinho carrinhoOficial = carrinhoRepository.findByUserIdAndStatusCarrinho(idUsuarioLogado, StatusCarrinho.ABERTO)
-                .orElseGet(() -> {
-                    User user = userService.buscarId(idUsuarioLogado);
-                    Carrinho novo = new Carrinho();
-                    novo.setUser(user);
-                    novo.setStatusCarrinho(StatusCarrinho.ABERTO);
-                    novo.setTotal(0.0);
-                    return carrinhoRepository.save(novo);
-                });
-
-        // 3. Mesclagem (Sua lógica está perfeita aqui)
-        idCarrinhoFantasma.ifPresent(id -> mesclarItens(id, carrinhoOficial));
-
-        return carrinhoOficial;
-    }
-	
-	
-    
-    
-    private void mesclarItens(UUID idCarrinhoFantasma, Carrinho carrinhoDestino) {
-        carrinhoRepository.findById(idCarrinhoFantasma).ifPresent(fantasma -> {
+        if (idUsuarioLogado != null) {
+            carrinho = obterCarrinhoUsuarioLogado(idUsuarioLogado, idCarrinhoExistente);
+        } else {
             
-            // Se o fantasma for de outro usuário (segurança), a gente nem mexe
-            if (fantasma.getUser() == null && !fantasma.getItens().isEmpty()) {
+            carrinho = obterCarrinhoAnonimo(idCarrinhoExistente);
+        }
+
+        processarAdicaoItem(carrinho, request);
+        
+        return atualizarTotalESalvar(carrinho);
+    }
+
+    private Carrinho obterCarrinhoUsuarioLogado(UUID userId, UUID idCarrinhoAnonimo) {
+        Carrinho oficial = carrinhoRepository.findByUserIdAndStatusCarrinho(userId, StatusCarrinho.ABERTO)
+                .orElseGet(() -> criarNovoCarrinhoParaUsuario(userId));
+
+       
+        if (idCarrinhoAnonimo != null) {
+            mesclarItens(idCarrinhoAnonimo, oficial);
+        }
+
+        return oficial;
+    }
+
+    private Carrinho obterCarrinhoAnonimo(UUID idCarrinhoExistente) {
+        if (idCarrinhoExistente != null) {
+            return carrinhoRepository.findById(idCarrinhoExistente)
+                    .orElseGet(this::criarNovoCarrinhoAnonimo);
+        }
+        return criarNovoCarrinhoAnonimo();
+    }
+
+    private void processarAdicaoItem(Carrinho carrinho, ItemCarrinhoRequest request) {
+        boolean jaExiste = carrinho.getItens().stream()
+                .anyMatch(item -> item.getReserva().getId().equals(request.idReserva()));
+
+        if (!jaExiste) {
+            itemService.criar(carrinho, request);
+        }
+    }
+
+    private void mesclarItens(UUID idCarrinhoFonte, Carrinho carrinhoDestino) {
+        carrinhoRepository.findById(idCarrinhoFonte).ifPresent(fonte -> {
+            
+            if (fonte.getUser() == null) {
+                fonte.getItens().forEach(item -> {
+                   
+                    boolean duplicado = carrinhoDestino.getItens().stream()
+                        .anyMatch(i -> i.getReserva().getId().equals(item.getReserva().getId()));
+                    
+                    if (!duplicado) {
+                        item.setCarrinho(carrinhoDestino);
+                        carrinhoDestino.getItens().add(item);
+                    }
+                });
                 
-                for (ItemCarrinho item : fantasma.getItens()) {
-                    item.setCarrinho(carrinhoDestino); // Transfere o item para o novo "pai"
-                    carrinhoDestino.getItens().add(item);
-                }
-                
-                fantasma.getItens().clear(); // Limpa o antigo para não dar erro de persistência
-                carrinhoRepository.delete(fantasma); // Mata o carrinho fantasma
-                
-                carrinhoDestino.atualizarTotal(); // Recalcula o valor com os novos itens
+                fonte.getItens().clear(); 
+                carrinhoRepository.delete(fonte);
             }
         });
     }
-    
-    @Transactional
-    public Carrinho adicionarItem(HttpSession session, ItemCarrinhoRequest request) {
-        Carrinho carrinho;
 
-        // 1. Tenta pegar o usuário do SecurityContext
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    private Carrinho criarNovoCarrinhoParaUsuario(UUID userId) {
+        User user = userService.buscarId(userId);
+        Carrinho novo = new Carrinho();
+        novo.setUser(user);
+        novo.setStatusCarrinho(StatusCarrinho.ABERTO);
+        novo.setTotal(0.0);
+        return carrinhoRepository.save(novo);
+    }
 
-        if (principal instanceof UserSpringSecurity userDetails) {
-            // --- FLUXO LOGADO ---
-            // Recupera o ID fantasma que estava na sessão antes do login (se existir)
-            UUID idFantasma = (UUID) session.getAttribute("CARRINHO_ID");
-            
-            // Busca o carrinho oficial e já tenta mesclar o fantasma
-            carrinho = buscarOuCriarCarrinho(Optional.ofNullable(idFantasma));
-            
-            // Limpa a sessão pois agora o carrinho é o oficial do banco
-            session.removeAttribute("CARRINHO_ID");
-        } else {
-            // --- FLUXO ANÔNIMO ---
-            UUID carrinhoId = (UUID) session.getAttribute("CARRINHO_ID");
-            if (carrinhoId != null) {
-                carrinho = carrinhoRepository.findById(carrinhoId)
-                        .orElseGet(() -> criarNovoCarrinhoAnonimo(session));
-            } else {
-                carrinho = criarNovoCarrinhoAnonimo(session);
-            }
-        }
+    private Carrinho criarNovoCarrinhoAnonimo() {
+        Carrinho novo = new Carrinho();
+        novo.setStatusCarrinho(StatusCarrinho.ABERTO);
+        novo.setTotal(0.0);
+        return carrinhoRepository.save(novo);
+    }
 
-        boolean reservaJaEstaNoCarrinho = carrinho.getItens().stream()
-                .anyMatch(item -> item.getReserva().getId().equals(request.idReserva()));
-
-        if (!reservaJaEstaNoCarrinho) {
-            // Só cria se essa reserva específica ainda não estiver lá
-            itemService.criar(carrinho, request);
-        }
-        
-        // 3. Atualiza o total e salva
-        carrinho.atualizarTotal(); 
+    private Carrinho atualizarTotalESalvar(Carrinho carrinho) {
+        Double total = precoService.calcularTotalCarrinho(carrinho.getItens());
+        carrinho.setTotal(total);
         return carrinhoRepository.save(carrinho);
     }
     
-    private Carrinho criarNovoCarrinhoAnonimo(HttpSession session) {
-        Carrinho novo = new Carrinho();
-        novo.setStatusCarrinho(StatusCarrinho.ABERTO);
-        novo = carrinhoRepository.save(novo);
-        
-        // GUARDA NA SESSÃO: O Spring Session vai salvar isso no banco de dados automaticamente
-        session.setAttribute("CARRINHO_ID", novo.getId());
-        
-        return novo;
+    @Transactional
+    public Carrinho buscarCarrinhoAtivo() {
+    	UUID userId = auth.getAuthenticatedUserId();
+        return carrinhoRepository.findByUserIdAndStatusCarrinho(userId, StatusCarrinho.ABERTO)
+                .orElseGet(() -> {
+                    return null; 
+                });
     }
-    
 
+    // Métodos de consulta simples mantidos para utilidade
+    public Carrinho buscarCarrinhoId(UUID id) {
+    	
+    	
+        return carrinhoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Carrinho não encontrado"));
+    }
 
     @Transactional
-    public void inativarCarrinho(UUID idCarrinho) {
-    	
-    	Carrinho carrinho = carrinhoRepository.findById(idCarrinho)
-    			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Carrinho não encontrado"));
-    	
-    	carrinho.setStatusCarrinho(StatusCarrinho.FECHADO);
-    	carrinhoRepository.save(carrinho);
-    	
-    }
-   
+	public void inativarCarrinho(UUID id) {
+		// TODO Auto-generated method stub
+		Carrinho cart = buscarCarrinhoId(id);
+		cart.setStatusCarrinho(StatusCarrinho.FECHADO);
+		carrinhoRepository.save(cart);
+	}
 }

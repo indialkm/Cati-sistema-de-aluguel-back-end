@@ -43,14 +43,6 @@ public class Carrinho {
 	@Enumerated(EnumType.STRING)
 	StatusCarrinho statusCarrinho;
 	
-	// Dentro de Carrinho.java
-	public void atualizarTotal() {
-	    this.total = (itens == null) ? 0.0 : 
-	        itens.stream()
-	             .mapToDouble(ItemCarrinho::getSubtotal)
-	             .sum();
-	}
-	
 	public void setItens(ItemCarrinho item) {
 		itens.add(item);
 

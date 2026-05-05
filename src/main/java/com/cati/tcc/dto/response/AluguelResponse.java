@@ -9,7 +9,7 @@ public record AluguelResponse(
 		UUID id,
 	    String nomeProduto,
 	    Double precoNoAto,
-	    StatusAluguel status,
+	    String status,
 	    ReservaResponse reserva,   
 	    EnderecoResponse localizacao
 		

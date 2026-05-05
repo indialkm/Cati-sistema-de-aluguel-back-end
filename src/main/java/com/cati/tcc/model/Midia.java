@@ -2,6 +2,7 @@ package com.cati.tcc.model;
 
 import java.util.UUID;
 
+import com.cati.tcc.config.exceptions.NegocioException;
 import com.cati.tcc.model.enums.TipoMidia;
 
 import jakarta.persistence.Entity;
@@ -16,8 +17,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
 @Getter @Setter @NoArgsConstructor
+@Entity(name="tb_midias")
 public class Midia {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,35 +34,25 @@ public class Midia {
     @JoinColumn(name = "checklist_id")
     private Checklist checklist;
     
+    @ManyToOne
+    @JoinColumn(name = "estoque_id") 
+    private Estoque estoque;
+    
     
     public void definirMidia(String url) {
         if (url == null || !url.contains(".")) {
-            this.tipo = TipoMidia.DESCONHECIDO;
+            throw new NegocioException("URL inválida ou sem extensão.");
         }
 
-       
         String urlLimpa = url.split("\\?")[0];
-
-        
         String extensao = urlLimpa.substring(urlLimpa.lastIndexOf(".") + 1).toLowerCase();
 
-        
         switch (extensao) {
-            case "jpg":
-            case "jpeg":
-            case "png":
-            case "webp":
-               this.tipo = TipoMidia.FOTO;
-               break;
-            case "mp4":
-            case "mkv":
-            case "mov":
-            case "avi":
-               this.tipo = TipoMidia.VIDEO;
-               break;
-            default:
-                this.tipo = TipoMidia.DESCONHECIDO;
-                break;
+            case "jpg", "jpeg", "png", "webp" -> this.tipo = TipoMidia.FOTO;
+            case "mp4", "mkv", "mov", "avi" -> this.tipo = TipoMidia.VIDEO;
+            default -> throw new NegocioException("Formato de arquivo '." + extensao + "' não é suportado pelo sistema.");
         }
     }
+    
+    
 }

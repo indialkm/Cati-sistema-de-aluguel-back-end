@@ -30,20 +30,19 @@ public class ItemCarrinhoService {
 	private final ReservaService reservaService;
 	private final EstoqueService estoqueService;
 	private final EnderecoService enderecoService;
-	
-
-	// Criar ItemCarrinho
+	private final RegraPrecoService precoService;
 
 	public ItemCarrinhoService(ItemCarrinhoRepository repository, ItemCarrinhoMapper mapper,
-			 ReservaService reservaService, EstoqueService estoqueService,
-			EnderecoService enderecoService) {
-
+			ReservaService reservaService, EstoqueService estoqueService, EnderecoService enderecoService,
+			RegraPrecoService precoService) {
 		this.repository = repository;
 		this.mapper = mapper;
 		this.reservaService = reservaService;
 		this.estoqueService = estoqueService;
 		this.enderecoService = enderecoService;
+		this.precoService = precoService;
 	}
+
 
 	/**
 	 * Fluxo de Aluguel e Pagamento
@@ -73,7 +72,7 @@ public class ItemCarrinhoService {
 	    item.setEstoque(estoque);
 	    item.setEnderecoEntrega(endereco);
 	   
-	    Double valorMultiplicadosPorDias =  item.getSubtotal();
+	    Double valorMultiplicadosPorDias = precoService.calcularSubtotalItem(item);
 	    
 	    item.setPreco(valorMultiplicadosPorDias);
 	    

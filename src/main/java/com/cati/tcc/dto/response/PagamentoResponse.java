@@ -16,7 +16,9 @@ public record PagamentoResponse(
 	    StatusPagamento status,
 	    FormasPagamento formaPagamento,
 	    String transacaoGatewayId,
+	    String clientSecret,
 	    Integer parcelas
+	    
 		
 		) {
 

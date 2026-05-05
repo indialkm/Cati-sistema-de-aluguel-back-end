@@ -29,6 +29,7 @@ public class PedidoMapper {
 
         return new PedidoResponse(
             pedido.getId(),
+            pedido.getUser().getNome(),
             pedido.getValorTotal(),
             pedido.getStatus(),
             pedido.getDataPedido(),

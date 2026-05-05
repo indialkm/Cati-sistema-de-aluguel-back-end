@@ -12,7 +12,7 @@ import com.cati.tcc.model.Endereco;
 public record ItemCarrinhoResponse(
 		
 		UUID id,
-	    Endereco endereco,
+	    EnderecoResponse endereco,
 	    
 	  
 	    UUID idReserva,

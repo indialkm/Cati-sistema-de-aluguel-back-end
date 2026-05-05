@@ -19,6 +19,7 @@ import java.util.UUID;
 @RequestMapping("/avaliacoes")
 @Tag(name = "Avaliacao")
 public class AvaliacaoController {
+	
 
     private final AvaliacaoService avaliacaoService;
     private final AvaliacaoMapper avaliacaoMapper;

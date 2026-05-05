@@ -5,13 +5,12 @@ import java.util.Optional;
 
 public record EstoqueRequest(
 		
-		Optional<Integer> quantidade,
-		Optional<String> descricao,
+		String descricao,
 		String nome,
-		Optional<Double> precoBase,
+		Double altura,
+		Double largura,
+		Double precoBase,
 		String categoria,
-		//Double largura,
-		//Double comprimento,
-		List<String> fotosModelos
+		String tipoEstoque
 		
 		) {}

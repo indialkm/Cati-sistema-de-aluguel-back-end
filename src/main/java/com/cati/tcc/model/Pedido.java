@@ -31,7 +31,8 @@ public class Pedido {
     private LocalDateTime dataPedido = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
-    private StatusPedido status = StatusPedido.AGUARDANDO_PAGAMENTO;
+    @Column(name = "status", length = 30) 
+    private StatusPedido status = StatusPedido.AGUARDANDO_PAGAMENTO;;
     
     @JsonManagedReference
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)

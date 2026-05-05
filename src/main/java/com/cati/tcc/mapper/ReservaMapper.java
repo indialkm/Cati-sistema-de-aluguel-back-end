@@ -5,7 +5,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.cati.tcc.dto.request.ReservaRequest;
+import com.cati.tcc.dto.response.PeriodoBloqueadoResponse;
 import com.cati.tcc.dto.response.ReservaResponse;
+import com.cati.tcc.model.PeriodoBloqueado;
 import com.cati.tcc.model.Reserva;
 
 
@@ -37,6 +39,16 @@ public class ReservaMapper {
 	        reserva.getDisponibilidade(),
 	        estoqueId
 	    );
+	}
+	
+	
+	public PeriodoBloqueadoResponse toResponsePeriodo(PeriodoBloqueado periodo) {
+		
+		return new PeriodoBloqueadoResponse(
+				periodo.getInicio(),
+				periodo.getFim()	
+				);
+				
 	}
 	
 }

@@ -15,6 +15,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -29,14 +30,33 @@ public class Aluguel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    @OneToOne
-    @JoinColumn(name = "item_pedido_id")
-    private ItemPedido itemPedido;
+   
+    private UUID idPedido;
+    
+    private UUID idItemPedido;
+    
+    @ManyToOne
+    private User user;
+    
+    @ManyToOne
+    private Estoque estoque;
 
+    @ManyToOne
+    private Reserva reserva;
+
+    @ManyToOne
+    private Endereco endereco;
+
+    private Double preco;
+    
+    private String formaDePagamento;
+    
     @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "checklist_entrada_id") // Cria coluna na tb_aluguel
     private Checklist checklistEntrada;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "checklist_saida_id") // Cria coluna na tb_aluguel
     private Checklist checklistSaida;
 
     @Enumerated(EnumType.STRING)

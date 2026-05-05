@@ -1,10 +1,15 @@
 package com.cati.tcc.service;
 
+import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.cati.tcc.config.security.UserSpringSecurity;
 import com.cati.tcc.dto.request.EnderecoRequest;
 import com.cati.tcc.dto.request.UserRequest;
 import com.cati.tcc.mapper.UserMapper;
@@ -13,6 +18,7 @@ import com.cati.tcc.model.User;
 import com.cati.tcc.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -39,7 +45,11 @@ public class UserService {
 		this.authService = authService;
 	}
 
-
+	public List<User> listarTodos()
+	{
+		return userRepository.findAll();
+	}
+	
 
 	@Transactional
 	public User save(UserRequest request) {
@@ -85,19 +95,85 @@ public class UserService {
 		userRepository.save(user);
 		
 		
-		
 		return user.getEnderecos().stream()
 		        .filter(e -> e.getLogradouro().equals(endereco.getLogradouro()) && e.getCep().equals(endereco.getCep()) && e.getNumero().equals(endereco.getNumero())) 
 		        .findFirst()
 		        .orElse(endereco);
 	}
 	
-	
-	/*public User procurarDonoEmpresa(String role) {
-	    return userRepository.buscarPrimeiroComCnpj("OWNER")
-	            .orElseThrow(() -> new EntityNotFoundException(
-	                "Configuração da empresa não encontrada: É necessário um usuário com perfil OWNER e CNPJ cadastrado."));
-	}*/
-	
 
+	
+	
+	
+	
+	@Transactional
+	public User atualizarPerfil(UserRequest request) {
+	  
+	    UUID userId = authService.getAuthenticatedUserId();
+	    
+	    User user = userRepository.findById(userId)
+	            .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+
+	    user.setNome(request.nome());
+	    user.setTelefone(request.telefone());
+	    
+	  
+	    if (!user.getEmail().equals(request.email())) {
+	        if (userRepository.existsByEmail(request.email())) {
+	            throw new RuntimeException("Este e-mail já está em uso por outro usuário.");
+	        }
+	        user.setEmail(request.email());
+	    }
+
+	    return userRepository.save(user);
+	}
+	
+	@Transactional
+	public List<Endereco> exibirEnderecosPorId(){
+		
+		UUID id = authService.getAuthenticatedUserId();
+		User user = buscarId(id);
+		List<Endereco> ends = user.getEnderecos();
+		return ends;
+		
+	}
+	
+	@Transactional	
+	public Endereco salvarEnderecoStateless(EnderecoRequest request) {
+	    
+	  
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+	    
+	    if (auth instanceof AnonymousAuthenticationToken) {
+	        System.out.println("Lógica de anônimo: salvando endereço órfão");
+	        Endereco temp = enderecoService.preparar(request);
+	        return enderecoService.salvar(temp);
+	    }
+	    UserSpringSecurity userLogado = (UserSpringSecurity) auth.getPrincipal();
+	   
+	    User user = buscarId(userLogado.id());
+	            
+	    Endereco endereco = enderecoService.preparar(request);
+	    endereco = enderecoService.salvar(endereco);
+	    
+	    user.getEnderecos().add(endereco);
+	    userRepository.save(user);
+	    
+	    return endereco;
+	}
+	
+	@Transactional
+	public void vincularEnderecoAoUsuario(UUID enderecoId) {
+	    UUID userId = authService.getAuthenticatedUserId();
+	    User user = buscarId(userId);
+	    Endereco endereco = enderecoService.buscarId(enderecoId);
+
+	    if (!user.getEnderecos().contains(endereco)) {
+	        user.getEnderecos().add(endereco);
+	        userRepository.save(user);
+	    }
+	    }
+	
+	
 }

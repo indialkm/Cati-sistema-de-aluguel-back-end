@@ -1,7 +1,7 @@
 package com.cati.tcc.controller;
 
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +29,31 @@ public class CarrinhoController {
 		this.carrinhoMapper = carrinhoMapper;
 	}
 
-	@PostMapping
-	@PreAuthorize("permitAll()")
-    public ResponseEntity<CarrinhoResponse> adicionar(@RequestBody ItemCarrinhoRequest request, HttpSession session) {
-        Carrinho carrinho = carrinhoService.adicionarItem(session, request);
-        return ResponseEntity.ok(carrinhoMapper.toResponse(carrinho));
+    @PostMapping("/adicionar")
+    public ResponseEntity<CarrinhoResponse> adicionar(
+        @RequestParam(required = false) UUID idCarrinho,
+        @RequestBody ItemCarrinhoRequest request
+    ) {
+
+        return ResponseEntity.ok(carrinhoMapper.toResponse
+        		(carrinhoService.adicionarItem(idCarrinho, request)));
     }
+	
+	@GetMapping("/{id}")
+	@PreAuthorize("permitAll()")
+	public ResponseEntity<CarrinhoResponse> buscarPorId(@PathVariable("id") UUID carrinhoID){
+		
+		return ResponseEntity.ok(carrinhoMapper.toResponse(carrinhoService.buscarCarrinhoId(carrinhoID))) ;
+		
+	}
+	
+	@GetMapping("/status")
+	@PreAuthorize("permitAll()")
+	public ResponseEntity<CarrinhoResponse> buscarPorAtivo(){
+		
+		return ResponseEntity.ok(carrinhoMapper.toResponse(carrinhoService.buscarCarrinhoAtivo())) ;
+		
+	}
 
 
 }

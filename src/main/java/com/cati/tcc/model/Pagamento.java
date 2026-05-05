@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -44,6 +45,9 @@ public class Pagamento {
     
     @Enumerated(EnumType.STRING)
     private FormasPagamento formaPagamento; 
+    
+    @Column(length = 500)
+    private String clientSecret;
     
     private String transacaoGatewayId;
     

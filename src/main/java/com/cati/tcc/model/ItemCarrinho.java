@@ -1,6 +1,8 @@
 package com.cati.tcc.model;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
@@ -40,21 +42,6 @@ public class ItemCarrinho {
     private Carrinho carrinho;
     
     private Double preco;
-
-
-    
-    public Double getSubtotal() {
-        if (this.estoque == null || this.reserva == null) {
-            return 0.0;
-        }
-        
-        long dias = java.time.temporal.ChronoUnit.DAYS.between(
-            reserva.getDataInicial(), 
-            reserva.getDataFinal()
-        );
-        
-        if (dias <= 0) dias = 1; 
-        return estoque.getPrecoBase() * dias;
-    }
+ 
 
 }

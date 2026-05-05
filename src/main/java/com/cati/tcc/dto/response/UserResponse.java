@@ -8,6 +8,7 @@ import com.cati.tcc.model.enums.Role;
 public record UserResponse(
 
 		UUID id,
+		String password,
 		String nome,
 		String email,
 		String telefone,

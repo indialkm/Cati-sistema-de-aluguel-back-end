@@ -33,6 +33,7 @@ public class ChecklistMapper {
 				
 				checklist.getId(),
 				checklist.getObservacoes(),
+				checklist.getTipoChecklist().name(),
 				midias,
 				checklist.getDataRegistro()
 				

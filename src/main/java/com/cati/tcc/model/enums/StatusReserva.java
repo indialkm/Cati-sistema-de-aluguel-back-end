@@ -1,5 +1,10 @@
 package com.cati.tcc.model.enums;
 
 public enum StatusReserva {
-	DISPONIVEL, ALUGADA, NAO_DISPONIVEL, CANCELADA
+	DISPONIVEL, 
+	AGUARDANDO_PAGAMENTO,
+	ALUGADA,
+	CONCLUIDA,
+	NAO_DISPONIVEL, 
+	CANCELADO
 }

@@ -1,48 +1,59 @@
 package com.cati.tcc.mapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
 
 import com.cati.tcc.dto.request.EstoqueRequest;
+import com.cati.tcc.dto.response.DetalhesModeloResponse;
 import com.cati.tcc.dto.response.EquipamentoResponse;
 import com.cati.tcc.dto.response.EstoqueResponse;
+import com.cati.tcc.dto.response.MidiaResponse;
 import com.cati.tcc.model.Estoque;
+import com.cati.tcc.model.Midia;
+import com.cati.tcc.model.enums.TipoEstoque;
 
 @Component
 public class EstoqueMapper {
-	/*Nesse caso estou populando estoque com o equipamento mapper porque não faz sentindo mostrar um eestoque vazio**/
-	private final EquipamentoMapper equipamentoMapper;
 
-    public EstoqueMapper(EquipamentoMapper equipamentoMapper) {
+    private final EquipamentoMapper equipamentoMapper;
+    private final MidiaMapper midiaMapper;
+
+    public EstoqueMapper(EquipamentoMapper equipamentoMapper, MidiaMapper midiaMapper) {
         this.equipamentoMapper = equipamentoMapper;
+        this.midiaMapper = midiaMapper;
     }
 
     public Estoque toEntity(EstoqueRequest request) {
         if (request == null) return null;
 
         Estoque estoque = new Estoque();
-        estoque.setQuantidade(request.quantidade().orElse(0)); 
-        estoque.setDescricao(request.descricao().orElse("Sem descrição"));
+        estoque.setDescricao(request.descricao());
         estoque.setNome(request.nome());
-        estoque.setPrecoBase(request.precoBase().orElse(0.0));
-        estoque.setFotosModelos(request.fotosModelos());
+        estoque.setPrecoBase(request.precoBase() == null ? 0.0 : request.precoBase());
         estoque.setCategoria(request.categoria());
-
+        estoque.setAltura(request.largura());
+        estoque.setAltura(request.altura());
+        estoque.setTipoEstoque(TipoEstoque.valueOf(request.tipoEstoque()));
+       
         return estoque;
     }
 
     public EstoqueResponse toResponse(Estoque estoque) {
         if (estoque == null) return null;
 
-        List<EquipamentoResponse> equipamentosDTO = null;
-
-        if (estoque.getEquipamentos() != null) {
-            equipamentosDTO = estoque.getEquipamentos()
-                    .stream()
-                    .map(equipamentoMapper::toResponse)
-                    .toList();
-        }
+       
+        List<EquipamentoResponse> equipamentosDTO = (estoque.getEquipamentos() != null) ?
+            estoque.getEquipamentos().stream()
+                .map(equipamentoMapper::toResponse)
+                .toList() : new ArrayList<>();
+        
+        
+        List<MidiaResponse> fotos = (estoque.getFotosModelos() != null) ?
+        		 estoque.getFotosModelos().stream()
+                .map(midiaMapper::toResponse) 
+                .toList() : new ArrayList<>();
 
         return new EstoqueResponse(
             estoque.getId(),
@@ -50,10 +61,37 @@ public class EstoqueMapper {
             estoque.getDescricao(),
             estoque.getNome(),
             estoque.getPrecoBase(),
-            estoque.getFotosModelos(),
+            fotos,
             estoque.getCategoria(),
-            equipamentosDTO
+            equipamentosDTO,
+            estoque.getLargura(),
+            estoque.getAltura(),
+            estoque.getTipoEstoque().name()
+            
         );
     }
 
+    public DetalhesModeloResponse toDetalhesResponse(Estoque estoque, Double precoCalculado, boolean disponivel) {
+        if (estoque == null) return null;
+
+        List<String> urlsFotos = (estoque.getFotosModelos() != null) ?
+        	    estoque.getFotosModelos().stream()
+        	        .map(midiaMapper::toResponse) 
+        	        .map(MidiaResponse::url)     
+        	        .toList() : new ArrayList<>();
+
+        return new DetalhesModeloResponse(
+            estoque.getId(),
+            estoque.getNome(),
+            estoque.getDescricao(),
+            urlsFotos.isEmpty() ? null : urlsFotos.get(0),
+            urlsFotos,
+            precoCalculado, 
+            estoque.getAltura(),
+            estoque.getLargura(),
+            estoque.getPrecoBase(),
+            estoque.getCategoria(),
+            disponivel
+        );
+    }
 }

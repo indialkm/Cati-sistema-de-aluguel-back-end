@@ -8,6 +8,7 @@ public record ChecklistResponse(
 	
 		UUID id,
 		String observacoes,
+		String tipoChecklist,
 		List<MidiaResponse> midias,
 		LocalDateTime dataRegistro
 		

@@ -1,9 +1,9 @@
 package com.cati.tcc.config.security;
 
 import java.util.Arrays;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,85 +18,89 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.cati.tcc.config.exceptions.CustomAccessDeniedHandler;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
-import org.springframework.http.HttpMethod;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-	
-	
+
     private final SecurityFilter securityFilter;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    
+    public SecurityConfig(SecurityFilter securityFilter, CustomAccessDeniedHandler customAccessDeniedHandler) {
+		this.securityFilter = securityFilter;
+		this.customAccessDeniedHandler = customAccessDeniedHandler;
+	}
 
-    public SecurityConfig(SecurityFilter securityFilter) {
-        this.securityFilter = securityFilter;
-    }
-
- // 1. Adicione este método dentro da classe SecurityConfig
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*")); // Permite todos os headers
-        configuration.setAllowCredentials(true); // Necessário para sua Session do carrinho
-        
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-    // 2. No seu método securityFilterChain, ative o CORS apontando para esse bean
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	@Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ATIVA O CORS AQUI
-            .csrf(csrf -> csrf.disable()) // Mantém desativado para o POST funcionar
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+          
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll() 
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()// LIBERA O OPTIONS
+                .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/users/**").permitAll()
-                .anyRequest().permitAll() // Libera tudo para testarmos a gravação
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/imagens/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/me/endereco").permitAll()
+                .anyRequest().permitAll()
             )
+            
+            .anonymous(anonymous -> anonymous
+                    .principal("anonymousUser")
+                    .authorities("ROLE_ANONYMOUS")
+                )
+        
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-    
-    @Configuration
-    public class OpenApiConfig {
 
-        @Bean
-        public OpenAPI customOpenAPI() {
-            return new OpenAPI()
-                .components(new Components()
-                    .addSecuritySchemes("bearer-key",
-                        new SecurityScheme()
-                            .type(SecurityScheme.Type.HTTP)
-                            .scheme("bearer")
-                            .bearerFormat("JWT")
-                            .description("Insira o token JWT gerado no login")))
-                .info(new Info()
-                    .title("API Sistema de Aluguel CATI")
-                    .description("Documentação técnica do sistema Cati")
-                    .version("v1"));
-        }
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+            .components(new Components()
+                .addSecuritySchemes("bearer-key",
+                    new SecurityScheme()
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")
+                        .description("Insira o token JWT gerado no login")))
+            .info(new Info()
+                .title("API Sistema de Aluguel CATI")
+                .description("Documentacao tecnica do sistema Cati")
+                .version("v1"));
     }
-	
 }

@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.cati.tcc.model.enums.TipoEstoque;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -36,18 +40,25 @@ public class Estoque {
 	private Double altura;
 	private Double largura;
 	
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "estoque_id")
+    private List<Midia> fotosModelos = new ArrayList<>();
 	
-	@ElementCollection
-	private List<String> fotosModelos;
+	@OneToMany(mappedBy = "estoque", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Equipamento> equipamentos = new ArrayList<>();
 	
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "estoque_id")
-	private List<Equipamento> equipamentos = new ArrayList<>();;
+	@Enumerated(EnumType.STRING)
+	private TipoEstoque tipoEstoque;
 	
 	public void adicionarEquipamento(Equipamento equipamento){		
-		this.equipamentos.add(equipamento);
-
+	    equipamento.setEstoque(this);
+	    this.equipamentos.add(equipamento);
 	}
 	
-
+	public void adicionarMidia(Midia midia) {
+        this.fotosModelos.add(midia);
+        midia.setEstoque(this);
+    }
+	
+	
 }

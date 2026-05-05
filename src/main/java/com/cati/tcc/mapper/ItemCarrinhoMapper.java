@@ -12,6 +12,13 @@ import com.cati.tcc.model.ItemPedido;
 @Component
 public class ItemCarrinhoMapper {
 	
+	private final EnderecoMapper enderecoMapper;
+
+	
+	public ItemCarrinhoMapper(EnderecoMapper enderecoMapper) {
+		this.enderecoMapper = enderecoMapper;
+	}
+
 	public ItemCarrinho toEntity(ItemCarrinhoRequest request) {
         if (request == null) return null;
         
@@ -25,13 +32,13 @@ public class ItemCarrinhoMapper {
 
         return new ItemCarrinhoResponse(
             item.getId(),
-            item.getEnderecoEntrega(),
+            enderecoMapper.toResponse(item.getEnderecoEntrega()),         
             item.getReserva().getId(),
             item.getReserva().getDataInicial(),
             item.getReserva().getDataFinal(),
             item.getEstoque().getId(),
             item.getEstoque().getNome(),
-            item.getEstoque().getPrecoBase()
+            item.getPreco()
         );
     }
     

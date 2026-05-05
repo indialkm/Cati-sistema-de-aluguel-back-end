@@ -34,10 +34,13 @@ public class UserMapper {
 
         return new UserResponse(
             user.getId(),
+            user.getPassword(),
             user.getNome(),
             user.getEmail(),
             user.getTelefone(),
             user.getRoles() 
         );
     }
+    
+    
 }

@@ -33,7 +33,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         
         String tokenJWT = recuperarToken(request);
 
-        // SÓ tenta validar se o token existir!
+        
         if (tokenJWT != null && !tokenJWT.trim().isEmpty()) { 
             try {
                 String subject = tokenService.getSubject(tokenJWT);
@@ -57,12 +57,13 @@ public class SecurityFilter extends OncePerRequestFilter {
                 }
             } catch (Exception e) {
                 
-                System.err.println("Erro ao validar token: " + e.getMessage());
+            	SecurityContextHolder.clearContext();
             }
         }
 
-        // ESSA LINHA PRECISA ESTAR FORA DO IF E DO TRY/CATCH
+        
         filterChain.doFilter(request, response);
+        
     }
     
     

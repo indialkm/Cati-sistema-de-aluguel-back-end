@@ -1,9 +1,12 @@
 package com.cati.tcc.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cati.tcc.dto.request.ItemCarrinhoRequest;
 import com.cati.tcc.dto.request.ReservaRequest;
 import com.cati.tcc.dto.response.CarrinhoResponse;
+import com.cati.tcc.dto.response.PeriodoBloqueadoResponse;
 import com.cati.tcc.dto.response.ReservaResponse;
 import com.cati.tcc.mapper.ReservaMapper;
 import com.cati.tcc.model.Carrinho;
@@ -42,6 +46,16 @@ public class ReservaController {
        
 		return ResponseEntity.ok(reservaMapper.toResponse(reservaService.criarReserva(request)));
 		
+    }
+	
+	@GetMapping("/estoque/{idEstoque}/datas-bloqueadas")
+    public ResponseEntity<List<PeriodoBloqueadoResponse>> getDatasBloqueadas(@PathVariable UUID idEstoque) {
+      
+        List<PeriodoBloqueadoResponse> periodos = reservaService.calcularDatasBloqueadas(idEstoque).stream()
+        										.map(i -> reservaMapper.toResponsePeriodo(i)).toList() ;
+
+
+        return ResponseEntity.ok(periodos);
     }
 
 }

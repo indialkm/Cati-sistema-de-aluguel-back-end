@@ -1,12 +1,13 @@
 package com.cati.tcc.service;
 
-import java.awt.print.Pageable;
+import java.time.LocalDateTime;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,6 +21,7 @@ import com.cati.tcc.model.User;
 import com.cati.tcc.model.enums.StatusItemPedido;
 import com.cati.tcc.model.enums.StatusPagamento;
 import com.cati.tcc.model.enums.StatusPedido;
+import com.cati.tcc.model.enums.StatusReserva;
 import com.cati.tcc.repository.PedidoRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -80,7 +82,6 @@ public class PedidoService {
 	
 	@Transactional
 	public Pedido buscarPorId(UUID id) {
-
 		return pedidoRepository.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
 		
@@ -89,36 +90,79 @@ public class PedidoService {
 	@Transactional
 	public Pedido atualizarStatus(UUID id, StatusPedido status) {
 		
-		return pedidoRepository.findById(id)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
+		Pedido pedido = buscarPorId(id);
+		pedido.setStatus(status);
+		
+		return pedido;
+		
+
+	}
+	
+	public Pedido fecharPedido(UUID id) {
+		
+		Pedido pedido = buscarPorId(id);
+		
+		List<ItemPedido> itens = pedido.getItensPedidos();
+		
+		itens.stream()
+				.forEach(i -> i.setStatus(StatusItemPedido.CONCLUIDO));
+		
+		pedido.setStatus(StatusPedido.PAGO);
+	    pedido.setItensPedidos(itens);
+		
+		pedidoRepository.save(pedido);
+	   
+		return pedido;
+
+	}
+		
+	public Page<Pedido> buscarTodos(Pageable pageable)
+	{
+		return pedidoRepository.findAll(pageable);
+	}
+	
+	public Page<Pedido> buscarPorUsuario(Pageable pageable){
+		
+		UUID id = authService.getAuthenticatedUserId();
+		User user = userService.buscarId(id);
+		
+		return pedidoRepository.findByUser(user, pageable);
 		
 	}
 	
-	public Pedido fecharPedido(ItemPedido item) {
-		
-		UUID id = item.getPedido().getId();
-		
-		Pedido pedido = pedidoRepository.findById(id)
-						.orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
-		
-		boolean todosConcluidos = pedido.getItensPedidos().stream()
-	            .allMatch(i -> i.getStatus() == StatusItemPedido.CONCLUIDO);
-		
-		if (todosConcluidos) {
-	        pedido.setStatus(StatusPedido.CONCLUIDO);
+	public Pedido cancelarPedidoSemPagamento(UUID idPedido) {
+	  
+	    Pedido pedido = buscarPorId(idPedido);
+
+	    
+	    if (pedido.getStatus() == StatusPedido.AGUARDANDO_PAGAMENTO) {
+	        pedido.setStatus(StatusPedido.CANCELADO);
+	        
+	        if (pedido.getItensPedidos() != null) {
+	            pedido.getItensPedidos().forEach(item -> {
+	                if (item.getReserva() != null) {
+	                    item.getReserva().setDisponibilidade(StatusReserva.CANCELADO);
+	                }
+	            });
+	        }
 	        
 	        return pedidoRepository.save(pedido);
-	    }
-	    
-	    return pedido; 
+	    } 
+
+	    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este pedido não pode ser cancelado por este fluxo.");
 	}
 		
-	
-	
+		
 
-	
+	public Pedido atualizarPedido(Pedido pedido)
+	{
+		return pedidoRepository.save(pedido);
+	}
 	/*UTILS METODOS PEDIDO*/
 	
+	public Page<Pedido>  buscarPorStatus(StatusPedido status,Pageable page){
+		return pedidoRepository.findPedidosCustom(status,page);
+	}
 
 	
 }
