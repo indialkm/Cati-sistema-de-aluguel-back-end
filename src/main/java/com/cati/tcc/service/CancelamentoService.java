@@ -49,13 +49,13 @@ public class CancelamentoService {
             
             historicoService.registrarMudanca(
             	    pedido, 
-            	    "Pedido pendente cancelado com sucesso. Nenhuma transação financeira foi realizada."
+            	    "Pedido pendente cancelado com sucesso."
             	);
             
-            return "Pedido pendente cancelado com sucesso. Nenhuma transação financeira foi realizada.";
+            return "Pedido pendente cancelado com sucesso.";
         }
         
-        // Só cancela por aqui se estiver pago (conforme sua regra)
+         
         if (StatusPedido.PAGO.equals(pedido.getStatus())) {
             
         	Pagamento pagamento = pagamentoService.buscarPorpedido(pedidoId);

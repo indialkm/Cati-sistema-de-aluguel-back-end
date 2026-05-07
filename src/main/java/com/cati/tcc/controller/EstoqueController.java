@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,8 +26,10 @@ import com.cati.tcc.dto.request.EstoqueRequest;
 import com.cati.tcc.dto.response.DetalhesModeloResponse;
 import com.cati.tcc.dto.response.EquipamentoResponse;
 import com.cati.tcc.dto.response.EstoqueResponse;
+import com.cati.tcc.dto.update.EstoquePatchDTO;
 import com.cati.tcc.mapper.EquipamentoMapper;
 import com.cati.tcc.mapper.EstoqueMapper;
+import com.cati.tcc.model.Estoque;
 import com.cati.tcc.service.EstoqueService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -102,6 +105,13 @@ public class EstoqueController {
 		return ResponseEntity.ok(estoqueService.filtrarPorCategoria(nome, pageable).map(mapper::toResponse));
 	}
 	
+	@PatchMapping("/atualizar/{id}")
+    public ResponseEntity<EstoqueResponse> atualizarParcial(
+            @PathVariable UUID id, 
+            @RequestBody EstoquePatchDTO dto) { 
+        return ResponseEntity.ok( mapper.toResponse(estoqueService.atualizarParcial(id, dto)));
+    }
+
 	
 	@PreAuthorize("hasRole('OWNER')")
 	@SecurityRequirement(name = "bearer-key")

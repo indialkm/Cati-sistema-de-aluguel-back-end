@@ -37,33 +37,15 @@ public class PagamentoService {
 		this.mapper = mapper;
 		this.pedidoService = pedidoService;
 	}
-
-
-   /* @Transactional
-    public Pagamento processar(PagamentoRequest request, Pedido pedido) {
-      
-        StatusPagamento statusGerado = gateway.processar(request);
-
-        Pagamento pagamento = mapper.toEntity(request, pedido);
-       
-        pagamento.setStatus(statusGerado);
-        pagamento.setDataPagamento(LocalDateTime.now());
-        pagamento.setValorPago(request.valorPago());
-        pagamento.setPayload_retorno(request.payload_retorno());
-
-        return repository.save(pagamento);
-    }*/
-    
     
     @Transactional
     public Pagamento iniciarPagamento(PagamentoRequest request) {
         
     	Pedido pedido = pedidoService.buscarPorId(request.idPedido());		
-        // 1. Chama o Stripe para criar a intenção
-        // Aqui você passa o valor e o ID do pedido no Metadata
+        
     	GatewayReponse payment = gateway.criarIntencao(request);
 
-        // 2. Salva no seu banco como PENDENTE
+        
         Pagamento pagamento = new Pagamento();
         pagamento.setPedido(pedido);
         pagamento.setValorPago(request.valorPago());
@@ -113,13 +95,11 @@ public class PagamentoService {
         pagamentoRepository.save(p);
     }
 
-    // Cenário 2: Cliente já pagou e você vai devolver o dinheiro (Refund)
-    @Transactional
     public void realizarEstorno(UUID pagamentoId) {
     	Pagamento p = pagamentoRepository.findById(pagamentoId)
     		    .orElseThrow(() -> new EntityNotFoundException("Pagamento com ID " + pagamentoId + " não encontrado para estorno."));
         
-        // Chama o Stripe (Refund)
+        
         gateway.estornar(p.getTransacaoGatewayId(), p.getValorPago());
         
         p.setStatus(StatusPagamento.ESTORNADO);

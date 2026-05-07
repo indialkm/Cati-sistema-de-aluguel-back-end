@@ -55,8 +55,7 @@ public class TransacaoService {
     public Pedido finalizarLocacao() {
         
         UUID userId = authService.getAuthenticatedUserId();
-
-       
+    
         Carrinho carrinho = carrinhoService.buscarCarrinhoAtivo();
 
         if (carrinho.getItens().isEmpty()) {

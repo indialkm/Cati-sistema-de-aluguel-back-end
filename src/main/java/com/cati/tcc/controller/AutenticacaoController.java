@@ -7,6 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cati.tcc.config.security.UserSpringSecurity;
@@ -18,11 +19,12 @@ import com.cati.tcc.mapper.UserMapper;
 import com.cati.tcc.service.AuthService;
 import com.cati.tcc.service.TokenService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/login")
+@RequestMapping("/auth")
 @Tag(name = "Login")
 public class AutenticacaoController {
 	
@@ -39,13 +41,19 @@ public class AutenticacaoController {
 		this.authService = authService;
 	}
 
-
-    @PostMapping
+    
+    @PostMapping("/login")
     @PreAuthorize("permitAll()")
     public ResponseEntity<UserLoginResponse> efetuarLogin(@RequestBody @Valid DadosAutenticacao dados) {
         UserLoginResponse response = authService.autenticar(dados);
         return ResponseEntity.ok(response);
     }
-
+    
+    @PostMapping("/logout")
+    @SecurityRequirement(name = "bearer-key")
+    public ResponseEntity<Void> logout() {
+        authService.logout();
+        return ResponseEntity.noContent().build();
+    }
 	
 }

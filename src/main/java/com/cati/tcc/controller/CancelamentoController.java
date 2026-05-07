@@ -29,10 +29,9 @@ public class CancelamentoController {
     
     @PostMapping("/{pedidoId}/cancelar")
     public ResponseEntity<CancelamentoResponse> cancelarPedido(@PathVariable UUID pedidoId) {
-        // Executa a lógica
+       
        String mensagem = cancelamentoService.executarCancelamentoTotal(pedidoId);
-        
-        // Busca o pedido atualizado para mostrar os novos status (opcional, ou fixa os nomes)
+     
         CancelamentoResponse resposta = new CancelamentoResponse(
             mensagem,
             pedidoId,

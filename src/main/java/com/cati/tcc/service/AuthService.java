@@ -58,5 +58,9 @@ public class AuthService {
         return userDetails.id();
     }
     
+    public void logout() {
+        SecurityContextHolder.clearContext();
+    }
+    
     
 }

@@ -23,6 +23,7 @@ import com.cati.tcc.dto.request.EquipamentoRequest;
 import com.cati.tcc.dto.request.EstoqueRequest;
 import com.cati.tcc.dto.response.DetalhesModeloResponse;
 import com.cati.tcc.dto.response.EstoqueResponse;
+import com.cati.tcc.dto.update.EstoquePatchDTO;
 import com.cati.tcc.mapper.EstoqueMapper;
 import com.cati.tcc.model.Equipamento;
 import com.cati.tcc.model.Estoque;
@@ -72,10 +73,18 @@ public class EstoqueService {
 	
 	
 	@Transactional
-	public Estoque atualizar(Estoque estoqueEntidade){
-		
-		return estoqueRepository.save(estoqueEntidade);
-			
+	public Estoque atualizarParcial(UUID id, EstoquePatchDTO dto) {
+	    Estoque estoqueExistente = buscarPorId(id);
+
+	    dto.getNome().ifPresent(estoqueExistente::setNome);
+	    dto.getDescricao().ifPresent(estoqueExistente::setDescricao);
+	    dto.getPrecoBase().ifPresent(estoqueExistente::setPrecoBase);
+	    dto.getCategoria().ifPresent(estoqueExistente::setCategoria);
+	    dto.getAltura().ifPresent(estoqueExistente::setAltura);
+	    dto.getLargura().ifPresent(estoqueExistente::setLargura);
+	    dto.getTipoEstoque().ifPresent(estoqueExistente::setTipoEstoque);
+
+	    return estoqueRepository.save(estoqueExistente);
 	}
 	
 	public Estoque buscarId(UUID id) {
@@ -91,6 +100,10 @@ public class EstoqueService {
 
 		return estoqueRepository.findAll(pageable);
 		}
+	
+	public Estoque atualizar(Estoque estoque) {
+		return estoqueRepository.save(estoque);
+	}
 	
 	@Transactional
 	public void baixarEstoque(UUID estoqueId, int quantidade) {
@@ -167,44 +180,6 @@ public class EstoqueService {
 	    estoqueRepository.delete(estoque);
 	}
 	
-	
-	/*@Transactional
-	public Estoque atualizar(UUID id, EstoqueRequest dto) {
-	   
-	    Estoque estoqueExistente = buscarPorId(id);
-
-	    
-	    if (dto.nome() != null && !dto.nome().isBlank()) {
-	        estoqueExistente.setNome(dto.nome());
-	    }
-	    
-	    if (dto.descricao() != null) {
-	        estoqueExistente.setDescricao(dto.descricao());
-	    }
-	    
-	    if (dto.precoBase() != null) {
-	        estoqueExistente.setPrecoBase(dto.precoBase());
-	    }
-	    
-	    if (dto.categoria() != null && !dto.categoria().isBlank()) {
-	        estoqueExistente.setCategoria(dto.categoria());
-	    }
-
-	    
-	    if (dto.quantidade() >= 0) { 
-	        estoqueExistente.setQuantidade(dto.quantidade());
-	    }
-	    
-	    if (dto.altura() != null) {
-	        estoqueExistente.setAltura(dto.altura());
-	    }
-	    
-	    if (dto.largura() != null) {
-	        estoqueExistente.setLargura(dto.largura());
-	    }
-
-	    return estoqueRepository.save(estoqueExistente);
-	}*/
 	
 }
 
