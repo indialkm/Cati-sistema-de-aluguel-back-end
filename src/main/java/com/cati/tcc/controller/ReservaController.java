@@ -43,9 +43,9 @@ public class ReservaController {
 	@PostMapping("/adicionar")
 	@PreAuthorize("permitAll()")
     public ResponseEntity<ReservaResponse> save(@RequestBody ReservaRequest request) {
-       
-		return ResponseEntity.ok(reservaMapper.toResponse(reservaService.criarReserva(request)));
 		
+		return ResponseEntity.ok(reservaMapper.toResponse(reservaService.criarReserva(request)));
+
     }
 	
 	@GetMapping("/estoque/{idEstoque}/datas-bloqueadas")

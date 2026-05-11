@@ -81,5 +81,10 @@ public class User {
 	    this.enderecos.add(endereco); 
 	}
 	
+	public void adicionarRole(Role role)
+	{
+		this.roles.add(role);
+	}
+	
 }
 

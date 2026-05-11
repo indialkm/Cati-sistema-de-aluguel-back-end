@@ -12,8 +12,7 @@ public record UserRequest(
 	    String password,
 	    String cpf,
 	    String cnpj,
-	    String telefone,
-	    Set<Role> roles
+	    String telefone
 		
 		) {
 

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.cati.tcc.model.enums.TipoEstoque;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
@@ -45,6 +46,7 @@ public class Estoque {
     private List<Midia> fotosModelos = new ArrayList<>();
 	
 	@OneToMany(mappedBy = "estoque", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonIgnore
 	private List<Equipamento> equipamentos = new ArrayList<>();
 	
 	@Enumerated(EnumType.STRING)

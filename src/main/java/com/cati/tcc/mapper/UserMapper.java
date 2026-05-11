@@ -23,8 +23,6 @@ public class UserMapper {
         user.setTelefone(request.telefone());
        
         user.setPassword(request.password());
-        
-        user.setRoles(request.roles() != null ? new HashSet<>(request.roles()) : new HashSet<>());
 
         return user;
     }

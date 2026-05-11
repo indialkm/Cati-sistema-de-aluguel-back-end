@@ -47,9 +47,9 @@ public class RegraPrecoService {
             
             double m2 = item.getEstoque().getAltura() * item.getEstoque().getLargura();
             double valorArea = m2 * precoBase;
-            double taxaAdicional = precoBase / 2.0;
+            double taxaAdicional = precoBase * 0.2;
 
-            return (valorArea + taxaAdicional) * dias;
+            return valorArea + (taxaAdicional * dias);
         }
 
         return 0.0;

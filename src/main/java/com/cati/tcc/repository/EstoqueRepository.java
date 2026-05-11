@@ -33,17 +33,16 @@ public interface EstoqueRepository extends JpaRepository<Estoque, UUID>{
 		);
 	
 	@Query("SELECT e FROM Estoque e WHERE " +
-	           "(:categoria IS NULL OR e.categoria = :categoria) AND " +
-	           "(:modelo IS NULL OR e.nome LIKE %:modelo%) AND " +
-	           "(:largura IS NULL OR e.largura = :largura) AND " +
-	           "(:largura IS NULL OR e.largura = :largura) AND " +
-	           "(e.quantidade >= :qtdMinima)")
-	    List<Estoque> buscarComFiltrosOpcionais(
-	        String categoria, 
-	        String modelo, 
-	        Double largura, 
-	        int qtdMinima
-	    );
+		       "(:categoria IS NULL OR e.categoria = :categoria) AND " +
+		       "(:modelo IS NULL OR LOWER(e.nome) LIKE LOWER(CONCAT('%', :modelo, '%'))) AND " +
+		       "(:largura IS NULL OR e.largura = :largura) AND " +
+		       "(e.quantidade >= :qtdMinima)")
+		List<Estoque> buscarComFiltrosOpcionais(
+		    String categoria, 
+		    String modelo, 
+		    Double largura, 
+		    int qtdMinima
+		);
 	
 	// Mude de findByCategoriaNomeIgnoreCase para:
 	Page<Estoque> findByCategoriaContainingIgnoreCase(String categoria, Pageable pageable);

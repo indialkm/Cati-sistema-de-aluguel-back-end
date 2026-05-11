@@ -14,12 +14,12 @@ import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.RefundCreateParams;
 
 @Component
-@Primary // Isso diz ao Spring para usar o Stripe em vez do simulador
+@Primary
 public class StripeGatewayImpl implements PagamentoGateway {
 	
 	// O CONSTRUTOR É O LUGAR IDEAL
     public StripeGatewayImpl() {
-        // Cole aqui a sua chave sk_test_... que aparece na imagem
+        
         Stripe.apiKey = "sk_test_51TMxxH9E0qFEn7nqq8MtYu7mv8Kp4FFiw5ul1u4zlPHuUJHXud685"
         		+ "j5vmdZsxfDNFeSfBIpuvAYXozdCsDSkH72I00TnYhtqOb";
     }

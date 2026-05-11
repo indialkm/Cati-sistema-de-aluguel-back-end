@@ -85,6 +85,25 @@ public class EstoqueController {
         DetalhesModeloResponse response = estoqueService.buscarDetalhesProcessados(id);
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/filtros")
+    public ResponseEntity<List<EstoqueResponse>> buscarComFiltros( 
+    		@RequestParam(required = false) String categoria,
+    		@RequestParam(required = false) String modelo,
+    		@RequestParam(required = false) Double largura,
+    		@RequestParam(defaultValue = "0") int qtdMinima ) {   
+        List<Estoque> resultados = estoqueService.filtrarEstoque(categoria, modelo, largura, qtdMinima);
+        
+        if (resultados.isEmpty()) {
+            return ResponseEntity.noContent().build(); 
+        }
+
+        List<EstoqueResponse> response = resultados.stream()
+                .map(mapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
    
     @PreAuthorize("hasRole('OWNER')")
 	@SecurityRequirement(name = "bearer-key")

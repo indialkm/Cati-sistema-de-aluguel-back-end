@@ -1,6 +1,5 @@
 package com.cati.tcc.dto.request;
 
-import java.util.List;
 import java.util.Optional;
 
 public record EstoqueRequest(

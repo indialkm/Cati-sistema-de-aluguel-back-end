@@ -15,6 +15,7 @@ import com.cati.tcc.dto.request.UserRequest;
 import com.cati.tcc.mapper.UserMapper;
 import com.cati.tcc.model.Endereco;
 import com.cati.tcc.model.User;
+import com.cati.tcc.model.enums.Role;
 import com.cati.tcc.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -58,17 +59,10 @@ public class UserService {
 			throw new RuntimeException("Email já cadastrado");
 		};
 		System.out.println(request.email());
-		/*
-		if(userRepository.existsByCNPJ(request.cnpj())) {
-			throw new RuntimeException("CNPJ já cadastrado");
-		}
-		
-		if(userRepository.existsByCPF(request.cpf())) {
-			throw new RuntimeException("CPF já cadastrado");
-		}*/
 		
 		User user = userMapper.toEntity(request);
 		user.setPassword(this.passwordEncoder.encode(request.password()));
+		user.adicionarRole(Role.ROLE_CLIENT);
 		return userRepository.save(user);
 	}
 	

@@ -154,6 +154,19 @@ public class EstoqueService {
         return estoqueMapper.toDetalhesResponse(estoque, precoFinal, estaDisponivel);
     }
 	
+	public List<Estoque> filtrarEstoque(String categoria, String modelo, Double largura, Integer qtdMinima) {
+	    
+	    String catFiltro = (categoria != null && !categoria.isBlank()) ? categoria : null;
+	    String modFiltro = (modelo != null && !modelo.isBlank()) ? modelo : null;
+	    
+	    Double largFiltro = (largura != null && largura > 0) ? largura : null;
+	    
+	    int minima = (qtdMinima != null) ? qtdMinima : 0;
+	    
+	    return estoqueRepository.buscarComFiltrosOpcionais(catFiltro, modFiltro, largFiltro, minima);
+	}
+	
+	
 	public Page<Estoque> filtrarPorCategoria(String nomeCategoria, Pageable pageable) {
 	    return estoqueRepository.findByCategoriaContainingIgnoreCase(nomeCategoria, pageable);
 	}
